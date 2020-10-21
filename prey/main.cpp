@@ -2,7 +2,9 @@
 #include <thread>
 #include "windows.h"
 
-char s[] = "12345";
+#define LOOP_STRING "_12345"
+
+char *s;
 
 [[noreturn]] void loop() {
     std::cout << "Starting loop" << std::endl;
@@ -14,6 +16,9 @@ char s[] = "12345";
 }
 
 int main() {
+    s = (char*)calloc(1024, sizeof(char));
+    strcpy(s, LOOP_STRING);
+
     pid_t pid = _getpid();
     std::cout << "Process pid: " << pid << std::endl;
 
