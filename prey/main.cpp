@@ -5,16 +5,12 @@
 
 std::string s = "12345";
 
-void loop() {
-    std::cout << "Starting loop (EXIT to break)" << std::endl;
+[[noreturn]] void loop() {
+    std::cout << "Starting loop" << std::endl;
 
     while (true) {
-        if (s != "EXIT") {
-            std::cout << s << std::endl;
-            Sleep(1000);
-        } else {
-            break;
-        }
+        std::cout << s << std::endl;
+        Sleep(1000);
     }
 }
 
