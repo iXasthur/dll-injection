@@ -1,52 +1,37 @@
 #include <iostream>
-#include <algorithm>
-#include <vector>
+#include <utility>
 #include "windows.h"
+#include "../arrow/arrow.h"
 
-void change(pid_t pid, std::string source, std::string replacement) {
-    HANDLE processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+void staticAttack(pid_t pid, std::string source, std::string replacement) {
+    attack(pid, std::move(source), std::move(replacement));
+}
 
-    if (processHandle != nullptr) {
-        MEMORY_BASIC_INFORMATION memInfo;
+void dynamicAttack(pid_t pid, std::string source, std::string replacement){
+    typedef void(*change)(pid_t pid, std::string source, std::string replacement);
 
-        unsigned char *addr = nullptr;
-        while (VirtualQueryEx(processHandle, addr, &memInfo, sizeof(memInfo))) {
-            if (memInfo.State == MEM_COMMIT && (memInfo.Type == MEM_MAPPED || memInfo.Type == MEM_PRIVATE)) {
-                size_t bytesRead;
-                std::vector<char> buffer;
-                buffer.resize(memInfo.RegionSize);
-                ReadProcessMemory(processHandle, addr, buffer.data(), memInfo.RegionSize, &bytesRead);
-                buffer.resize(bytesRead);
-
-                auto offset = std::search(buffer.begin(), buffer.end(), source.begin(), source.end());
-                if (offset != buffer.end()) {
-                    int distance = std::distance(buffer.begin(), offset);
-                    LPVOID addrToWriteTo = addr + distance;
-
-                    std::cout << "Found string at " << addrToWriteTo << std::endl;
-
-                    if (WriteProcessMemory(processHandle, addrToWriteTo, replacement.data(), replacement.length() + 1,
-                                           nullptr)) {
-                        std::cout << "Successfully changed " << source << " to " << replacement << std::endl;
-                    } else {
-                        DWORD error = GetLastError();
-                        std::cout << "Error writing to memory " << error << std::endl;
-                    }
-                }
-            }
-            addr += memInfo.RegionSize;
-        }
-
-        CloseHandle(processHandle);
-    } else {
-        std::cout << "Invalid pid " << pid << std::endl;
+    const char *lib = "../../arrow/cmake-build-debug/libarrow.dll";
+    HMODULE libraryHandle = LoadLibraryA(lib);
+    if (!libraryHandle) {
+        std::cout << "Can't load library" << std::endl;
+        return;
     }
+
+    auto func = (change)GetProcAddress(libraryHandle, "attack");
+    if (!func) {
+        std::cout << "Can't find the function" << std::endl;
+        std::cout << GetLastError() << std::endl;
+        return;
+    }
+
+    func(pid, std::move(source), std::move(replacement));
 }
 
 int main() {
     pid_t pid = -1;
-    std::string source = "_12345";
-    std::string replacement = "^_^";
-    change(pid, source, replacement);
+
+    staticAttack(pid, "_12345", "^_^");
+    dynamicAttack(pid, "^_^", "_12345");
+
     return 0;
 }
