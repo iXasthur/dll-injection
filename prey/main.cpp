@@ -1,9 +1,8 @@
 #include <iostream>
 #include <thread>
-#include <string>
 #include "windows.h"
 
-std::string s = "12345";
+char s[] = "12345";
 
 [[noreturn]] void loop() {
     std::cout << "Starting loop" << std::endl;
