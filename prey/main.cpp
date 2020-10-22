@@ -2,7 +2,7 @@
 #include <thread>
 #include "windows.h"
 
-#define LOOP_STRING "_12345"
+#define LOOP_STRING "_CHANGE_ME_"
 
 char *s;
 
