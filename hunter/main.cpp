@@ -46,27 +46,24 @@ void remoteInjectAttack(pid_t pid, const char *dllPath) {
                                                               (LPVOID) remoteString, 0, NULL);
                     if (createdThread) {
                         WaitForSingleObject(createdThread, INFINITE);
-
                         std::cout << "Injected DLL" << std::endl;
-
-                        // Free the memory that is not being using anymore.
-                        VirtualFreeEx(targetProcess, remoteString, 0, MEM_RELEASE);
                         CloseHandle(createdThread);
-                        CloseHandle(targetProcess);
-
-                        //VirtualFreeEx(hProcess , (LPVOID)Memory , 0, MEM_RELEASE);
                     } else {
                         std::cout << "Error creating remote thread" << std::endl;
                     }
                 } else {
                     std::cout << "Error writing to process memory" << std::endl;
                 }
+                
+                VirtualFreeEx(targetProcess, remoteString, 0, MEM_RELEASE);
             } else {
                 std::cout << "Error allocating memory for remote string" << std::endl;
             }
         } else {
             std::cout << "Error getting LoadLibraryA from kernel32.dll" << std::endl;
         }
+
+        CloseHandle(targetProcess);
     } else {
         std::cout << "Error in OpenProcess()" << std::endl;
     }
